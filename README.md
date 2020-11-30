@@ -1,12 +1,21 @@
 # Keychain83 🔐
 
-Simple utility for storing data in a keychain. 
+Simple utility for storing data in Apple's Keychain. 
+
+Once the data is stored in the keychain it's persistent and secure even after deleting the app.
 
 ## Installation
 
 ### CocoaPods (iOS 10+)
 
 You can use [CocoaPods](http://cocoapods.org/) to install `Keychain83` by adding it to your `Podfile`:
+
+Add the following line to your `Podfile`.
+```
+pod 'Keychain83'
+```
+
+For example as follows:
 
 ```ruby
 platform :ios, '10.0'
