@@ -24,6 +24,9 @@ open class Keychain {
     
     /// the service anme
     private let service: String
+    
+    /// the callback used to provide additional configuration for the queries used to add/update/get/delete the values to/from the kaychain
+    public var queryConfiguration: ((NSDictionary)->(NSDictionary))?
 
     /// Initializer with service. Used to initialize Keychain for `kSecClassGenericPassword` class.
     public init(service: String) {
@@ -71,9 +74,12 @@ open class Keychain {
     ///
     /// - Parameter key: the key
     public func removeGenericPassword(_ key: String) {
-        let query = [kSecClass: kSecClassGenericPassword,
+        var query = [kSecClass: kSecClassGenericPassword,
                      kSecAttrService: service,
                      kSecAttrAccount: key] as NSDictionary
+        if let queryConfiguration = queryConfiguration {
+            query = queryConfiguration(query)
+        }
         let status = SecItemDelete(query as CFDictionary)
         if status != errSecSuccess && status != errSecItemNotFound {
             print("ERROR: Keychain.remove: \(status)")
@@ -87,10 +93,13 @@ open class Keychain {
     ///   - value: the value
     public func addGenericPassword(key: String, value: String) {
         if let secret = value.data(using: String.Encoding.utf8, allowLossyConversion: false) {
-            let query = [kSecClass: kSecClassGenericPassword,
+            var query = [kSecClass: kSecClassGenericPassword,
                          kSecAttrService: service,
                          kSecAttrAccount: key,
                          kSecValueData: secret] as NSDictionary
+            if let queryConfiguration = queryConfiguration {
+                query = queryConfiguration(query)
+            }
             let status = SecItemAdd(query, nil)
             if status != errSecSuccess {
                 print("ERROR: Keychain.store: \(status)")
@@ -105,9 +114,12 @@ open class Keychain {
     ///   - value: the value
     public func updateGenericPassword(key: String, value: String) {
         if let secret = value.data(using: String.Encoding.utf8, allowLossyConversion: false) {
-            let query = [kSecClass: kSecClassGenericPassword,
+            var query = [kSecClass: kSecClassGenericPassword,
                          kSecAttrService: service,
                          kSecAttrAccount: key] as NSDictionary
+            if let queryConfiguration = queryConfiguration {
+                query = queryConfiguration(query)
+            }
             let status = SecItemUpdate(query, [kSecValueData: secret, kSecAttrSynchronizable: kCFBooleanFalse!] as CFDictionary)
             if status != errSecSuccess {
                 print("ERROR: Keychain.update: \(status)")
@@ -120,10 +132,13 @@ open class Keychain {
     /// - Parameters:
     ///   - key: the key
     private func getGenericPassword(_ key: String) -> String? {
-        let query = [kSecClass: kSecClassGenericPassword,
+        var query = [kSecClass: kSecClassGenericPassword,
                      kSecAttrService: service,
                      kSecAttrAccount: key,
                      kSecReturnData: true] as NSDictionary
+        if let queryConfiguration = queryConfiguration {
+            query = queryConfiguration(query)
+        }
         var data: CFTypeRef? = nil
         let status = SecItemCopyMatching(query, &data)
         if status != errSecSuccess && status != errSecItemNotFound {
@@ -142,9 +157,12 @@ open class Keychain {
     /// - Parameters:
     ///   - key: the key
     public func existsGenericPassword(_ key: String) -> Bool {
-        let query = [kSecClass: kSecClassGenericPassword,
+        var query = [kSecClass: kSecClassGenericPassword,
                      kSecAttrService: service,
                      kSecAttrAccount: key] as NSDictionary
+        if let queryConfiguration = queryConfiguration {
+            query = queryConfiguration(query)
+        }
         let status = SecItemCopyMatching(query, nil)
         return status != noErr
     }

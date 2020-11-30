@@ -15,6 +15,8 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         testGeneralPassword()
+        
+        testAdditionalConfigurationForGeneralPassword()
     }
 
     /// Test general password adding, updating, getting and deleting
@@ -39,5 +41,26 @@ class ViewController: UIViewController {
         print("Deleted. Value: \(String(describing: keychainUtility[key]))")
     }
 
+    /// Test general password adding, getting and deleting with extra configuration
+    private func testAdditionalConfigurationForGeneralPassword() {
+        let keychainUtility = Keychain(service: "My Special Keychain")
+        
+        // Extra configuration
+        keychainUtility.queryConfiguration = { query in
+            let query = NSMutableDictionary(dictionary: query)
+            query[kSecAttrAccessible] = kSecAttrAccessibleWhenUnlocked // adds `kSecAttrAccessible` settings
+            return query
+        }
+        
+        let key = UUID().uuidString
+        
+        // Adding
+        keychainUtility[key] = "value accessible when device is unlocked only"
+        
+        print("Added. Value: \(String(describing: keychainUtility[key]))")
+        
+        // Deleting
+        keychainUtility[key] = nil
+    }
 }
 
